@@ -1,0 +1,56 @@
+buildscript {
+    ext.kotlin_version = '1.2.40'
+    ext.web_dir = 'web'
+
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+group 'groupid'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'kotlin2js'
+
+sourceSets {
+    main.kotlin.srcDirs += "src/main"
+    test.kotlin.srcDirs += "src/test"
+}
+
+compileKotlin2Js {
+    kotlinOptions.outputFile = "${projectDir}/web/main.js"
+    kotlinOptions.sourceMap = true
+}
+
+compileTestKotlin2Js {
+    kotlinOptions.sourceMap = true
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    compile 'org.jetbrains.kotlinx:kotlinx-html-js:0.6.9'
+
+    testCompile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version"
+}
+
+build.doLast {
+    configurations.compile.each { File file ->
+        copy {
+            includeEmptyDirs = false
+
+            from zipTree(file.absolutePath)
+            into "${projectDir}/web"
+            include { fileTreeElement ->
+                def path = fileTreeElement.path
+                path.endsWith(".js") && (path.startsWith("META-INF/resources/") || !path.startsWith("META-INF/"))
+            }
+        }
+    }
+}
